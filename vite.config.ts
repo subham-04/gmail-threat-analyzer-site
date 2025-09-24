@@ -11,7 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "/Gmail-Threat-Analyzer/", // Replace with your GitHub repo name
+  base: "/gmail-threat-analyzer-site/", // GitHub Pages base URL
   build: {
     outDir: "dist",
     assetsDir: "assets",
