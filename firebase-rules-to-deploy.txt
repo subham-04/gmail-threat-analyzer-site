@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User devices with comprehensive tracking (PRIMARY COLLECTION)
+    match /user_devices/{document} {
+      allow create: if 
+        request.resource.data.keys().hasAll(['deviceId', 'sessionId', 'device', 'referrer', 'landingPage']) &&
+        request.resource.data.deviceId is string &&
+        request.resource.data.deviceId.size() < 100 &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() < 100 &&
+        request.resource.data.landingPage is string &&
+        request.resource.data.landingPage.size() < 200 &&
+        // Allow additional analytics fields with proper serverTimestamp handling
+        (!('timestamp' in request.resource.data) || 
+         request.resource.data.timestamp == request.time ||
+         request.resource.data.timestamp is timestamp) &&
+        (!('totalPageViews' in request.resource.data) || request.resource.data.totalPageViews is number) &&
+        (!('totalTimeSpent' in request.resource.data) || request.resource.data.totalTimeSpent is number) &&
+        (!('sessionCount' in request.resource.data) || request.resource.data.sessionCount is number) &&
+        (!('isConverted' in request.resource.data) || request.resource.data.isConverted is bool) &&
+        (!('userEmail' in request.resource.data) || request.resource.data.userEmail is string) &&
+        (!('conversionEvents' in request.resource.data) || request.resource.data.conversionEvents is list) &&
+        (!('firstVisit' in request.resource.data) || 
+         request.resource.data.firstVisit == request.time ||
+         request.resource.data.firstVisit is timestamp) &&
+        (!('lastVisit' in request.resource.data) || 
+         request.resource.data.lastVisit == request.time ||
+         request.resource.data.lastVisit is timestamp) &&
+        (!('ipAddress' in request.resource.data) || request.resource.data.ipAddress is string) &&
+        (!('ipLocation' in request.resource.data) || request.resource.data.ipLocation is map);
+      
+      allow update: if 
+        // Allow updates to tracking fields (including increment operations)
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalPageViews', 'totalTimeSpent', 'conversionEvents', 'isConverted', 'userEmail', 'sessionCount', 'lastVisit']);
+      
+      // Enable set operations with merge for upsert functionality
+      allow write: if
+        // Allow upsert operations for session management
+        request.resource.data.keys().hasAll(['deviceId']) &&
+        request.resource.data.deviceId is string &&
+        request.resource.data.deviceId.size() < 100;
+      
+      allow read: if false; // Privacy protection - no reads allowed
+    }
+    
+    // Device events tracking
+    match /device_events/{document} {
+      allow create: if 
+        // Required fields validation - only require essential fields
+        request.resource.data.keys().hasAll(['deviceId', 'sessionId', 'eventId', 'eventType', 'page']) &&
+        request.resource.data.deviceId is string &&
+        request.resource.data.deviceId.size() < 100 &&
+        request.resource.data.sessionId is string &&
+        request.resource.data.sessionId.size() < 100 &&
+        request.resource.data.eventId is string &&
+        request.resource.data.eventId.size() < 100 &&
+        request.resource.data.eventType in ['page_view', 'button_click', 'form_start', 'form_complete', 'download', 'scroll_milestone', 'time_milestone'] &&
+        request.resource.data.page is string &&
+        request.resource.data.page.size() < 200;
+      
+      allow read: if false; // Privacy protection
+    }
+    
+    // User registrations with enhanced validation (Device ID Strategy)
+    match /user_registrations/{document} {
+      allow create: if 
+        request.resource.data.keys().hasAll(['deviceId', 'userEmail', 'userId', 'sessionId', 'name', 'email', 'occupation']) &&
+        request.resource.data.deviceId is string &&
+        request.resource.data.deviceId.size() < 100 &&
+        request.resource.data.userEmail is string &&
+        request.resource.data.userEmail.matches('.*@.*\\..*') &&
+        request.resource.data.name is string &&
+        request.resource.data.email is string &&
+        request.resource.data.occupation is string &&
+        request.resource.data.email.matches('.*@.*\\..*') &&
+        request.resource.data.name.size() < 100 &&
+        request.resource.data.email.size() < 100 &&
+        request.resource.data.occupation.size() < 50 &&
+        (
+          !('useCase' in request.resource.data) || 
+          request.resource.data.useCase.size() < 500
+        ) &&
+        (!('ipAddress' in request.resource.data) || request.resource.data.ipAddress is string) &&
+        (!('ipLocation' in request.resource.data) || request.resource.data.ipLocation is map) &&
+        (!('conversionPath' in request.resource.data) || request.resource.data.conversionPath is list) &&
+        (!('timeToConversion' in request.resource.data) || request.resource.data.timeToConversion is number) &&
+        (!('sourcePage' in request.resource.data) || request.resource.data.sourcePage is string) &&
+        (!('timestamp' in request.resource.data) || 
+         request.resource.data.timestamp == request.time ||
+         request.resource.data.timestamp is timestamp) &&
+        request.resource.data.email != '' &&
+        request.resource.data.name != '';
+      
+      allow read: if false; // Privacy protection
+    }
+    
+    // Daily aggregated stats (public read for dashboard)
+    match /daily_aggregated/{document} {
+      allow read: if true; // Public dashboard access
+      allow create, update: if 
+        document.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+        request.resource.data.keys().hasAll(['stats', 'lastUpdated']);
+    }
+    
+    // Hourly aggregated stats (public read for dashboard)
+    match /hourly_aggregated/{document} {
+      allow read: if true; // Public dashboard access
+      allow create, update: if 
+        document.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}') &&
+        request.resource.data.keys().hasAll(['stats', 'lastUpdated']);
+    }
+    
+    // Real-time metrics (public read for dashboard)
+    match /realtime_metrics/{document} {
+      allow read: if true; // Public dashboard access
+      allow create, update: if true; // Allow real-time updates
+    }
+    
+    // Legacy collections (backward compatibility)
+    match /early_access_signups/{document} {
+      allow read, write: if true; // Keep for backward compatibility
+    }
+    
+    match /page_analytics/{document} {
+      allow read, write: if true; // Keep for backward compatibility
+    }
+    
+    match /daily_stats/{document} {
+      allow read, write: if true; // Keep for backward compatibility
+    }
+  }
+}
