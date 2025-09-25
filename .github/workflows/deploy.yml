@@ -1,47 +1,134 @@
-name: Deploy to GitHub Pages
+name: Deployname: Deploy to GitHub Pagesname: Deploy to GitHub Pages
+
+
 
 on:
+
   push:
-    branches:
+
+    branches:on:on:
+
       - master
-  workflow_dispatch:
+
+  push:  push:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write    branches:    branches:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build project
-        run: npm run build
+
+
+jobs:      - master  # or main, depending on your default branch      - master
+
+  deploy:
+
+    runs-on: ubuntu-latest  workflow_dispatch:
+
+    
+
+    steps:permissions:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v3  contents: writepermissions:
+
+
+
+      - name: Setup Node  contents: read
+
+        uses: actions/setup-node@v3
+
+        with:jobs:  pages: write
+
+          node-version: '18'
+
+          cache: 'npm'  build-and-deploy:  id-token: write
+
+
+
+      - name: Install dependencies    runs-on: ubuntu-latest
+
+        run: npm install
+
+    steps:concurrency:
+
+      - name: Build
+
+        run: npm run build      - name: Checkout  group: "pages"
+
         env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}        uses: actions/checkout@v3  cancel-in-progress: false
+
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}      - name: Set up Node.jsjobs:
+
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
-        
+
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}        uses: actions/setup-node@v3  build:
+
+          VITE_VIRUSTOTAL_API_KEY: ${{ secrets.VITE_VIRUSTOTAL_API_KEY }}
+
+          VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}        with:    runs-on: ubuntu-latest
+
+
+
+      - name: Deploy to GitHub Pages          node-version: '18'    steps:
+
+        uses: peaceiris/actions-gh-pages@v3
+
+        with:          cache: 'npm'      - name: Checkout
+
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+          publish_dir: ./dist        uses: actions/checkout@v4
+
+      - name: Install Dependencies        
+
+        run: npm ci      - name: Setup Node.js
+
+        uses: actions/setup-node@v4
+
+      - name: Build        with:
+
+        run: npm run build          node-version: '20'
+
+        env:          cache: 'npm'
+
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}          
+
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}      - name: Install dependencies
+
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}        run: npm ci
+
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}        
+
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}      - name: Build project
+
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}        run: npm run build
+
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}        env:
+
+          VITE_VIRUSTOTAL_API_KEY: ${{ secrets.VITE_VIRUSTOTAL_API_KEY }}          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+
+          VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
+      - name: Deploy to GitHub Pages          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+
+        uses: peaceiris/actions-gh-pages@v3          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+
+        with:          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+          github_token: ${{ secrets.GITHUB_TOKEN }}          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+
+          publish_dir: ./dist        
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
